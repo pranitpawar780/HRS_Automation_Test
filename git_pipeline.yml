@@ -1,0 +1,49 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  # Define your AWS and Docker credentials as CI/CD environment variables.
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  DOCKER_REGISTRY: $CI_REGISTRY
+  DOCKER_IMAGE_NAME: "hrs-docker-image"
+  AWS_REGION: "hrs-aws-region"
+
+before_script:
+  - echo "Setting up environment..."
+
+build:
+  stage: build
+  script:
+    - echo "Building Java application..."
+    - mvn clean install  # Add Maven build command here
+
+test:
+  stage: test
+  script:
+    - echo "Running tests..."
+    # Add commands to run your tests.
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying to AWS..."
+    - |
+      if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then
+        # Deploy to AWS Lambda using AWS SAM for serverless deployment.
+        sam build
+        sam deploy --stack-name your-stack-name --region $AWS_REGION --capabilities CAPABILITY_IAM
+      else
+        # Deploy to Amazon EKS or ECS using Docker.
+        # Build Docker image
+        docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME .
+        
+        # Push Docker image to registry
+        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $DOCKER_REGISTRY
+        docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$CI_COMMIT_REF_NAME
+        
+        # Deploy to ECS or EKS (customize as per your setup)
+        # Add deployment commands for ECS or EKS.
+      fi
