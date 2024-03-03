@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Resources:
+  YourFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: your.package.YourHandler
+      Runtime: java11
+      CodeUri: target/java-jar.jar
+      MemorySize: 512
+      Timeout: 10
+      Events:
+        YourApi:
+          Type: Api
+          Properties:
+            Path: /directory-path
+            Method: GET
